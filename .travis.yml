@@ -1,0 +1,20 @@
+sudo: true
+language: erlang
+otp_release:
+  - 18.0
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y build-essential git imagemagick --fix-missing
+script: "./rebar3 as prod tar"
+branches:
+  only:
+    - master
+deploy:
+  on:
+    tags: true
+  provider: s3
+  bucket: "artifacts"
+  access_key_id: ""
+  secret_access_key: ""
+  skip_cleanup: true
+  region: us-west-1

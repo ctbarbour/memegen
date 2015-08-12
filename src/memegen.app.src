@@ -1,0 +1,16 @@
+{application, 'memegen',
+ [{description, "A Meme Generator"},
+  {vsn, "git"},
+  {registered, []},
+  {mod, {'memegen_app', []}},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {contributors, []},
+  {licenses, []},
+  {links, []}
+ ]}.

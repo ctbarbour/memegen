@@ -71,7 +71,6 @@ generate(char *source_image_path, char *sink_image_path, char *meme_text)
   MagickReadImage(wand, source_image_path);
 
   ssize_t width;
-  ssize_t height;
   ssize_t pointsize;
   ssize_t stroke_width;
   double scale;
@@ -79,7 +78,6 @@ generate(char *source_image_path, char *sink_image_path, char *meme_text)
 
   // Scale text
   width = MagickGetImageWidth(wand);
-  height = MagickGetImageHeight(wand);
   scale = scaleText(meme_text, formatted_text);
   pointsize = width / 5.0;
   stroke_width = pointsize / 30.0;

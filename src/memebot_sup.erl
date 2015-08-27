@@ -1,4 +1,4 @@
--module(memegen_sup).
+-module(memebot_sup).
 
 -behaviour(supervisor).
 

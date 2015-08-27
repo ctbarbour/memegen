@@ -2,8 +2,7 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "precise64"
-  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+  config.vm.box = "chef/centos-6.5"
 
   config.vbguest.auto_update = false
 
@@ -15,7 +14,8 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.provision "shell", inline: <<-SHELL
-     sudo apt-get update -qq
-     sudo apt-get install -y build-essential git curl pkg-config libmagickwand-dev
+     sudo yum -u update
+     sudo yum -y groupinstall "Development Tools"
+     sudo yum -y install git curl
    SHELL
 end

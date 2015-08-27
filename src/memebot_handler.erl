@@ -1,4 +1,4 @@
--module(memegen_handler).
+-module(memebot_handler).
 
 -export([init/3,
 	 handle/2,
@@ -23,5 +23,5 @@ handle_method({_, Req}) ->
     cowboy_req:reply(405, Req).
 
 generate_meme(Opts, Req) ->
-    {ok, Meme} = memegen:generate(Opts),
+    {ok, Meme} = memebot:generate(Opts),
     cowboy_req:reply(200, [{<<"content-type">>, <<"image/jpeg">>}], Meme, Req).

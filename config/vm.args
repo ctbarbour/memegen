@@ -1,6 +1,6 @@
--name memegen
+-name memebot
 
--setcookie memegen_cookie
+-setcookie memebot_cookie
 
 +K true
 +A30

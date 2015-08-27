@@ -1,9 +1,9 @@
--module(memegen).
+-module(memebot).
 
 -export([generate/1]).
 
 generate(Opts) ->
-    Prog = filename:join(code:priv_dir(memegen), "memegen"),
+    Prog = filename:join(code:priv_dir(memebot), "memebot"),
     Args = build_args(Opts, []),
     Port = open_port({spawn_executable, Prog},
 		     [stream, use_stdio, exit_status,

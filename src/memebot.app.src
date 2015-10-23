@@ -8,7 +8,9 @@
     stdlib,
     cowboy,
     erlcloud,
-    jsx
+    jsx,
+    inets,
+    ssl
    ]},
   {env,[]},
   {modules, []},

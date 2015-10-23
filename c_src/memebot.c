@@ -54,7 +54,7 @@ scaleText(const char* text, char* buf)
 }
 
 void
-generate(char *source_image_path, char *sink_image_path, char *meme_text)
+generate(char *source_image_path, char *sink_image_path, char *top_text, char *bottom_text)
 {
 
   MagickWand *wand = NULL;
@@ -78,11 +78,11 @@ generate(char *source_image_path, char *sink_image_path, char *meme_text)
 
   // Scale text
   width = MagickGetImageWidth(wand);
-  scale = scaleText(meme_text, formatted_text);
+  scale = scaleText(top_text, formatted_text);
   pointsize = width / 5.0;
   stroke_width = pointsize / 30.0;
 
-  // Draw base text
+  // Draw top text
   PixelSetColor(pixel_wand, "white");
   DrawSetFillColor(drawing_wand, pixel_wand);
   DrawSetFont(drawing_wand, "Impact");
@@ -101,6 +101,36 @@ generate(char *source_image_path, char *sink_image_path, char *meme_text)
 
   // Draw the text
   DrawAnnotation(drawing_wand, 0, 0, (const unsigned char *)formatted_text);
+
+  if (bottom_text) {
+    char formatted_bottom_text[100] = { '\0' };
+
+    // Scale text
+    width = MagickGetImageWidth(wand);
+    scale = scaleText(bottom_text, formatted_bottom_text);
+    pointsize = width / 5.0;
+    stroke_width = pointsize / 30.0;
+
+    // Draw bottom text
+    PixelSetColor(pixel_wand, "white");
+    DrawSetFillColor(drawing_wand, pixel_wand);
+    DrawSetFont(drawing_wand, "Impact");
+    DrawSetFontSize(drawing_wand, pointsize * scale);
+    DrawSetFontWeight(drawing_wand, 700);
+    DrawSetTextInterlineSpacing(drawing_wand, -(pointsize / 3) * scale);
+    DrawSetGravity(drawing_wand, SouthGravity);
+
+    // Add a black outline to the text
+    PixelSetColor(pixel_wand, "black");
+    DrawSetStrokeWidth(drawing_wand, stroke_width * scale);
+    DrawSetStrokeColor(drawing_wand, pixel_wand);
+
+    // Turn on Anitalias
+    DrawSetTextAntialias(drawing_wand, MagickTrue);
+
+    // Draw the text
+    DrawAnnotation(drawing_wand, 0, 0, (const unsigned char *)formatted_bottom_text);
+  }
 
   // Draw the image on the magick wand
   MagickDrawImage(wand, drawing_wand);
@@ -126,13 +156,15 @@ main(int argc, char * const argv[])
   int option = 0;
   char *source_image_path = "logo:";
   char *sink_image_path = NULL;
-  char *meme_text = "MEME";
+  char *top_meme_text = "MEME";
+  char *bottom_meme_text = NULL;
 
   static struct option longopts[] = {
     { "help", no_argument, NULL, 'h'},
     { "source", required_argument, NULL, 'i' },
     { "sink", required_argument, NULL, 'o' },
-    { "text", required_argument, NULL, 't' },
+    { "top", required_argument, NULL, 't' },
+    { "bottom", required_argument, NULL, 'b' },
     {0, 0, 0, 0}
   };
 
@@ -142,7 +174,8 @@ main(int argc, char * const argv[])
       printf("Usage: %s [OPTIONS]\n", argv[0]);
       printf("  -i, --source          Source image path\n");
       printf("  -o, --sink            Sink image path\n");
-      printf("  -t, --text            Meme text\n");
+      printf("  -t, --top             Top Meme text\n");
+      printf("  -b, --bottom          Bottom Meme text\n");
       printf("  -h, --help            Print help\n");
       return 0;
     case 'i':
@@ -152,7 +185,10 @@ main(int argc, char * const argv[])
       sink_image_path = optarg;
       break;
     case 't':
-      meme_text = optarg;
+      top_meme_text = optarg;
+      break;
+    case 'b':
+      bottom_meme_text = optarg;
       break;
     case '?':
       fprintf(stderr, "Try `%s --help` for more information.\n", argv[0]);
@@ -160,7 +196,7 @@ main(int argc, char * const argv[])
     }
   }
 
-  generate(source_image_path, sink_image_path, meme_text);
+  generate(source_image_path, sink_image_path, top_meme_text, bottom_meme_text);
 
   return 0;
 }

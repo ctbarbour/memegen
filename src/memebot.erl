@@ -28,8 +28,10 @@ switch(Switch, Value) ->
 
 build_args([], Args) ->
     Args;
-build_args([{text, Text} | Rest], Args) ->
-    build_args(Rest, [switch("text", Text) | Args]);
+build_args([{top, Text} | Rest], Args) ->
+    build_args(Rest, [switch("top", Text) | Args]);
+build_args([{bottom, Text} | Rest], Args) ->
+    build_args(Rest, [switch("bottom", Text) | Args]);
 build_args([{source, Source} | Rest], Args) ->
     build_args(Rest, [switch("source", Source) | Args]);
 build_args([_ | Rest], Args) ->

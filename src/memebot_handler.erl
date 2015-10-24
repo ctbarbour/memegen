@@ -31,7 +31,7 @@ terminate(_Reason, _Req, _State) ->
 
 handle_method({<<"POST">>, Req}) ->
     {ok, Body, Req2} = cowboy_req:body(Req),
-    Command = build_command(jsx:decode(Body), #command{}),
+    Command = build_command(parse_body(Body), #command{}),
     generate_meme(Command, Req2);
 handle_method({_, Req}) ->
     cowboy_req:reply(405, Req).
@@ -46,7 +46,7 @@ generate_meme(Command, Req) ->
     Body = jsx:encode(#{<<"username">> => <<"memebot">>,
 			<<"text">> => <<"">>,
 			<<"icon_emoji">> => <<":ghost:">>,
-		        <<"channel">> => Command#command.channel_name,
+		        <<"channel">> => Command#command.channel_id,
 		        <<"attachments">> => [
 					      #{<<"image_url">> => list_to_binary(GetUrl)}
 					     ]}),
@@ -62,8 +62,8 @@ build_command([], Command) ->
     Command;
 build_command([{<<"user_name">>, UserName} | Rest], Command) ->
     build_command(Rest, Command#command{user_name=UserName});
-build_command([{<<"channel_name">>, ChannelName} | Rest], Command) ->
-    build_command(Rest, Command#command{channel_name=ChannelName});
+build_command([{<<"channel_id">>, ChannelId} | Rest], Command) ->
+    build_command(Rest, Command#command{channel_id=ChannelId});
 build_command([{<<"text">>, Text} | Rest], Command) ->
     build_command(Rest, Command#command{text=Text});
 build_command([_Other | Rest], Command) ->
@@ -72,3 +72,9 @@ build_command([_Other | Rest], Command) ->
 post_to_slack(Body) ->
     {ok, SlackURL} = application:get_env(memebot, slack_url),
     httpc:request(post, {SlackURL, [], "application/json", Body}, [], []).
+
+parse_body(Body) ->
+    lists:map(fun(Pair) ->
+		      [Key, Value] = binary:split(Pair, <<"=">>),
+		      {Key, Value}
+	      end, binary:split(Body, <<"&">>, [global])).

@@ -17,7 +17,7 @@ wordWrap(const char* text, int columns, char *buf)
   int curr = 0;
 
   length = strlen(text);
-  characters_per_line = columns + 4;
+  characters_per_line = columns - 4;
   while (i < length) {
     if ((curr < characters_per_line) ||
 	(curr >= characters_per_line && !isspace(text[i]))) {
@@ -85,10 +85,9 @@ generate(char *source_image_path, char *sink_image_path, char *top_text, char *b
   // Draw top text
   PixelSetColor(pixel_wand, "white");
   DrawSetFillColor(drawing_wand, pixel_wand);
-  DrawSetFont(drawing_wand, "NimbusMono");
+  DrawSetFont(drawing_wand, "Impact");
   DrawSetFontSize(drawing_wand, pointsize * scale);
   DrawSetFontWeight(drawing_wand, 700);
-  DrawSetTextInterlineSpacing(drawing_wand, -(pointsize / 3) * scale);
   DrawSetGravity(drawing_wand, NorthGravity);
 
   // Add a black outline to the text
@@ -114,10 +113,9 @@ generate(char *source_image_path, char *sink_image_path, char *top_text, char *b
     // Draw bottom text
     PixelSetColor(pixel_wand, "white");
     DrawSetFillColor(drawing_wand, pixel_wand);
-    DrawSetFont(drawing_wand, "NimbusMono");
+    DrawSetFont(drawing_wand, "Impact");
     DrawSetFontSize(drawing_wand, pointsize * scale);
     DrawSetFontWeight(drawing_wand, 700);
-    DrawSetTextInterlineSpacing(drawing_wand, -(pointsize / 3) * scale);
     DrawSetGravity(drawing_wand, SouthGravity);
 
     // Add a black outline to the text

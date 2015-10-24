@@ -67,7 +67,7 @@ build_command([{<<"channel_id">>, ChannelId} | Rest], Command) ->
     build_command(Rest, Command#command{channel_id=ChannelId});
 build_command([{<<"text">>, Text} | Rest], Command) ->
     StringText = [http_uri:decode(StringText) ||
-		     StringText <- [lists:flatten(io_lib:format("~s", [Text]))]],
+		     StringText <- [lists:flatten(io_lib:format("~s", [binary:replace(Text, <<"+">>, <<"%20">>, [global])]))]],
     build_command(Rest, Command#command{text=StringText});
 build_command([_Other | Rest], Command) ->
     build_command(Rest, Command).
@@ -81,6 +81,7 @@ parse_body(Body) ->
 		      [Key, Value] = binary:split(Pair, <<"=">>),
 		      {Key, Value}
 	      end, binary:split(Body, <<"&">>, [global])).
+
 
 s3_host() ->
     case os:getenv("AWS_REGION") of

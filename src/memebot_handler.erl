@@ -40,8 +40,9 @@ generate_meme(Command, Req) ->
     Opts = [{top, Command#command.text}, {source, filename:join(code:priv_dir(memebot), "ron-burgundy.jpg")}],
     {ok, Meme} = memebot:generate(Opts),
     Key = lists:flatten(io_lib:format("~s.jpg", [[io_lib:format("~2.16.0B",[X]) || <<X:8>> <= erlang:md5(Meme) ]])),
-    erlcloud_s3:put_object(bucket(), Key, Meme, [{acl, public_read}]),
     Config = erlcloud_aws:default_config(),
+    erlcloud_s3:put_object(bucket(), Key, Meme, [{acl, public_read}], Config#aws_config{s3_host=s3_host()}),
+
     GetUrl = erlcloud_s3:get_object_url(bucket(), Key, Config#aws_config{s3_scheme = "http://"}),
     Body = jsx:encode(#{<<"username">> => <<"memebot">>,
 			<<"text">> => <<"">>,
@@ -72,7 +73,7 @@ build_command([_Other | Rest], Command) ->
     build_command(Rest, Command).
 
 post_to_slack(Body) ->
-    {ok, SlackURL} = application:get_env(memebot, slack_url),
+    SlackURL = os:getenv("SLACK_URL"),
     httpc:request(post, {SlackURL, [], "application/json", Body}, [], []).
 
 parse_body(Body) ->
@@ -80,3 +81,11 @@ parse_body(Body) ->
 		      [Key, Value] = binary:split(Pair, <<"=">>),
 		      {Key, Value}
 	      end, binary:split(Body, <<"&">>, [global])).
+
+s3_host() ->
+    case os:getenv("AWS_REGION") of
+	undefined ->
+	    "s3.amazonaws.com";
+	Region ->
+	    lists:flatten(io_lib:format("s3-~s.amazonaws.com", [Region]))
+    end.

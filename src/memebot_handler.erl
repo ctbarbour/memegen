@@ -19,6 +19,7 @@
 	 }).
 
 init(_Type, Req, _Opts) ->
+    ok = error_logger:info_msg("~p", [Req]),
     {ok, Req, undefined}.
 
 handle(Req, State) ->

@@ -85,7 +85,7 @@ generate(char *source_image_path, char *sink_image_path, char *top_text, char *b
   // Draw top text
   PixelSetColor(pixel_wand, "white");
   DrawSetFillColor(drawing_wand, pixel_wand);
-  DrawSetFont(drawing_wand, "Impact");
+  DrawSetFont(drawing_wand, "NimbusMono");
   DrawSetFontSize(drawing_wand, pointsize * scale);
   DrawSetFontWeight(drawing_wand, 700);
   DrawSetTextInterlineSpacing(drawing_wand, -(pointsize / 3) * scale);
@@ -114,7 +114,7 @@ generate(char *source_image_path, char *sink_image_path, char *top_text, char *b
     // Draw bottom text
     PixelSetColor(pixel_wand, "white");
     DrawSetFillColor(drawing_wand, pixel_wand);
-    DrawSetFont(drawing_wand, "Impact");
+    DrawSetFont(drawing_wand, "NimbusMono");
     DrawSetFontSize(drawing_wand, pointsize * scale);
     DrawSetFontWeight(drawing_wand, 700);
     DrawSetTextInterlineSpacing(drawing_wand, -(pointsize / 3) * scale);

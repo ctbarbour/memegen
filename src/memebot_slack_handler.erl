@@ -47,6 +47,7 @@ generate_meme(Command, Req) ->
 					      #{<<"image_url">> => list_to_binary(GetUrl)}
 					     ]}),
     {ok, Result} = post_to_slack(Body),
+    ok = error_logger:info_msg("~p~n", [Result]),
     cowboy_req:reply(200, Req).
 
 meme_source() ->

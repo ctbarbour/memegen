@@ -13,4 +13,8 @@ terminate(_Reason, _Req, _State) ->
     ok.
 
 handle_method({<<"GET">>, Req}) ->
-    cowboy_req:reply(200, Req).
+    cowboy_req:reply(200, Req);
+handle_method({<<"HEAD">>, Req}) ->
+    cowboy_req:reply(200, Req);
+handle_method({_Other, Req}) ->
+    cowboy_req:reply(405, Req).

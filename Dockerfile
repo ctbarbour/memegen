@@ -1,5 +1,7 @@
 FROM ubuntu:precise
 
+ENV LANG=en_US.UTF-8
+
 RUN apt-get update -qq \
     && apt-get install -y libmagickwand-dev libwxbase2.8-0 libwxgtk2.8-0 git
 RUN curl -L "http://packages.erlang-solutions.com/site/esl/esl-erlang/FLAVOUR_1_general/esl-erlang_18.1-1~ubuntu~precise_amd64.deb" > erlang.deb \

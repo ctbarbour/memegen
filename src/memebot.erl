@@ -26,10 +26,10 @@ wait_for_data(Port, Acc) ->
 build_args([], Args) ->
     Args;
 build_args([{top, Top} | Rest], Args) ->
-    build_args(Rest, [<<"--top=", Top/binary>>|Args]);
+    build_args(Rest, [["--top=", Top]|Args]);
 build_args([{bottom, Bottom} | Rest], Args) ->
-    build_args(Rest, [<<"--bottom=", Bottom/binary>>|Args]);
+    build_args(Rest, [["--bottom=", Bottom]|Args]);
 build_args([{source, Source} | Rest], Args) ->
-    build_args(Rest, [<<"--source=", Source/binary>>|Args]);
+    build_args(Rest, [["--source=", Source]|Args]);
 build_args([_ | Rest], Args) ->
     build_args(Rest, Args).

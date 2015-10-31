@@ -41,12 +41,14 @@ retrieve_token(Code, Req, State) ->
     parse_access_token(jsx:decode(list_to_binary(Body), [return_maps]), Req, State).
 
 parse_access_token(#{<<"ok">> := true, <<"access_token">> := AccessToken}, Req, State) ->
-    ok = error_logger:info_msg("AccessToken: ~s~n", [AccessToken]),
+    {ok, UserId} = retrieve_user_id(AccessToken),
+    ok = error_logger:info_msg("AccessToken: ~s~nUserId: ~s~n", [AccessToken, UserId]),
     {ok, Req2} = cowboy_req:reply(200, Req),
     {ok, Req2, State};
 parse_access_token(#{<<"ok">> := false, <<"error">> := Error}, Req, State) ->
     ok = error_logger:error_msg("Failed to retrieve access token: ~s~n", [Error]),
-    {ok, Req2} = cowboy_req:reply(400, Req),
+    Response = jsx:encode(#{<<"ok">> => false, <<"error">> => Error}),
+    {ok, Req2} = cowboy_req:reply(400, [], Response, Req),
     {ok, Req2, State}.
 
 request_code(Req, State) ->
@@ -54,6 +56,16 @@ request_code(Req, State) ->
     ok = error_logger:info_msg("Request code: ~s~n", [AuthUrl]),
     {ok, Req2} = cowboy_req:reply(302, [{<<"location">>, AuthUrl}], Req),
     {ok, Req2, State}.
+
+retrieve_user_id(Token) ->
+    Url = io_lib:format("https://slack.com/api/auth.test?token=~s", [Token]),
+    {ok, {_Status, _Headers, Body}} = httpc:request(Url),
+    parse_user_id(jsx:decode(list_to_binary(Body), [return_maps])).
+
+parse_user_id(#{<<"ok">> := true, <<"user_id">> := UserId}) ->
+    {ok, UserId};
+parse_user_id(#{<<"ok">> := false, <<"error">> := Error}) ->
+    {error, Error}.
 
 terminate(_Reason, _Req, _State) ->
     ok.

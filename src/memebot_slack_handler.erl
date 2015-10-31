@@ -40,7 +40,7 @@ generate_meme(Command, Req) ->
     cowboy_req:reply(200, Req).
 
 meme_source() ->
-    list_to_binary(filename:join(code:priv_dir(memebot), "ron-burgundy.jpg")).
+    filename:join(code:priv_dir(memebot), "ron-burgundy.jpg").
 
 bucket() ->
     {ok, Bucket} = application:get_env(memebot, s3_bucket),

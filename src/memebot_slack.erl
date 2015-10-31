@@ -2,9 +2,9 @@
 
 -include("memebot_slack.hrl").
 
--export([decode/1]).
+-export([decode_slash_command/1]).
 
-decode(Body) ->
+decode_slash_command(Body) ->
     build(proplist_from_form_urlencoded(Body)).
 
 build(Command) ->

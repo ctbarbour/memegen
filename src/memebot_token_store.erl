@@ -4,7 +4,7 @@
 
 -include_lib("erlcloud/include/erlcloud_aws.hrl").
 
--export([start_link/4, put/2, get/1]).
+-export([start_link/2, put/2, get/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3,
 	 terminate/2]).
 
@@ -22,17 +22,15 @@ put(UserId, Token) ->
 get(UserId) ->
     gen_server:call(?MODULE, {get, UserId}).
 
-start_link(AwsAccessKeyId, AwsSecretAccessKey, AwsRegion, Table) ->
+start_link(AwsRegion, Table) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE,
-			  [AwsAccessKeyId, AwsSecretAccessKey, AwsRegion, Table], []).
+			  [AwsRegion, Table], []).
 
-init([AwsAccessKeyId, AwsSecretAccessKey, AwsRegion, Table]) ->
-    DbConfig = erlcloud_ddb2:new(AwsAccessKeyId, AwsSecretAccessKey),
+init([AwsRegion, Table]) ->
+    DbConfig = erlcloud_aws:default_config(),
     DdbHost = lists:flatten(io_lib:format("dynamodb.~s.amazonaws.com", [AwsRegion])),
     DbConfig2 = DbConfig#aws_config{ddb_host=DdbHost},
-    {ok, #state{aws_access_key_id=AwsAccessKeyId,
-		aws_secret_access_key=AwsSecretAccessKey,
-		aws_region=AwsRegion,
+    {ok, #state{aws_region=AwsRegion,
 		table=Table,
 		db_config=DbConfig2}}.
 

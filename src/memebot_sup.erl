@@ -2,19 +2,18 @@
 
 -behaviour(supervisor).
 
--export([start_link/3]).
+-export([start_link/1]).
 -export([init/1]).
 
-start_link(AwsAccessKeyId, AwsSecretAccessKey, AwsRegion) ->
+start_link(AwsRegion) ->
     supervisor:start_link({local, ?MODULE}, ?MODULE,
-			  [AwsAccessKeyId, AwsSecretAccessKey, AwsRegion]).
+			  [AwsRegion]).
 
-init([AwsAccessKeyId, AwsSecretAccessKey, AwsRegion]) ->
+init([AwsRegion]) ->
     {ok, Table} = application:get_env(memebot, token_table),
     TokenStore = {memebot_token_store,
 		  {memebot_token_store, start_link,
-		   [AwsAccessKeyId, AwsSecretAccessKey, AwsRegion,
-		    list_to_binary(Table)]},
+		   [AwsRegion, list_to_binary(Table)]},
 		  permanent,
 		  1000,
 		  worker,

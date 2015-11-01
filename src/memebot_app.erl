@@ -5,8 +5,6 @@
 -export([start/2, stop/1, on_request/1, on_response/4]).
 
 start(_StartType, _StartArgs) ->
-    {ok, AwsAccessKeyId} = get_env("AWS_ACCESS_KEY_ID"),
-    {ok, AwsSecretAccessKey} = get_env("AWS_SECRET_ACCESS_KEY"),
     {ok, AwsRegion} = get_env("AWS_REGION"),
     ClientCredentials = client_credentials(),
     Dispatch = cowboy_router:compile([{'_',[{"/health", memebot_health_handler, []},
@@ -18,7 +16,7 @@ start(_StartType, _StartArgs) ->
 				[{env, [{dispatch, Dispatch}]},
 				 {onrequest, fun ?MODULE:on_request/1},
 				 {onresponse, fun ?MODULE:on_response/4}]),
-    memebot_sup:start_link(AwsAccessKeyId, AwsSecretAccessKey, AwsRegion).
+    memebot_sup:start_link(AwsRegion).
 
 stop(_State) ->
     ok.

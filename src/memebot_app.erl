@@ -5,6 +5,9 @@
 -export([start/2, stop/1, on_request/1, on_response/4]).
 
 start(_StartType, _StartArgs) ->
+    {ok, AwsAccessKeyId} = get_env("AWS_ACCESS_KEY_ID"),
+    {ok, AwsSecretAccessKey} = get_env("AWS_SECRET_ACCESS_KEY"),
+    {ok, AwsRegion} = get_env("AWS_REGION"),
     ClientCredentials = client_credentials(),
     Dispatch = cowboy_router:compile([{'_',[{"/health", memebot_health_handler, []},
 					    {"/slack", memebot_slack_handler, []},
@@ -15,7 +18,7 @@ start(_StartType, _StartArgs) ->
 				[{env, [{dispatch, Dispatch}]},
 				 {onrequest, fun ?MODULE:on_request/1},
 				 {onresponse, fun ?MODULE:on_response/4}]),
-    memebot_sup:start_link().
+    memebot_sup:start_link(AwsAccessKeyId, AwsSecretAccessKey, AwsRegion).
 
 stop(_State) ->
     ok.
@@ -28,20 +31,16 @@ on_response(Code, Headers, Body, Req) ->
     ok = error_logger:info_msg("[~p] ~p~n~p~n", [Code, Headers, Body]),
     Req.
 
-client_credentials() ->
-    {ok, ClientId} = case os:getenv("SLACK_CLIENT_ID") of
-			 false ->
-			     ok = error_logger:error_msg("Missing SLACK_CLIENT_ID environment variable"),
-			     {error, missing_client_id};
-			 Value ->
-			     {ok, Value}
-		     end,
+get_env(Env) ->
+    case os:getenv(Env) of
+	false ->
+	    ok = error_logger:error_msg("Missing ~s environment variable", [Env]),
+	    {error, {missing_environment_variable, Env}};
+	Val ->
+	    {ok, Val}
+    end.
 
-    {ok, ClientSecret} = case os:getenv("SLACK_CLIENT_SECRET") of
-			     false ->
-				 ok = error_logger:error_msg("Missing SLACK_CLIENT_SECRET environment varibale"),
-				 {error, missing_client_secret};
-			     V ->
-				 {ok, V}
-			 end,
+client_credentials() ->
+    {ok, ClientId} = get_env("SLACK_CLIENT_ID"),
+    {ok, ClientSecret} = get_env("SLACK_CLIENT_SECRET"),
     [{client_id, ClientId}, {client_secret, ClientSecret}].

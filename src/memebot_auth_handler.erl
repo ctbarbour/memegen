@@ -42,7 +42,7 @@ retrieve_token(Code, Req, State) ->
 
 parse_access_token(#{<<"ok">> := true, <<"access_token">> := AccessToken}, Req, State) ->
     {ok, UserId} = retrieve_user_id(AccessToken),
-    ok = error_logger:info_msg("AccessToken: ~s~nUserId: ~s~n", [AccessToken, UserId]),
+    ok = memebot_token_store:put(UserId, AccessToken),
     {ok, Req2} = cowboy_req:reply(200, Req),
     {ok, Req2, State};
 parse_access_token(#{<<"ok">> := false, <<"error">> := Error}, Req, State) ->
@@ -52,7 +52,8 @@ parse_access_token(#{<<"ok">> := false, <<"error">> := Error}, Req, State) ->
     {ok, Req2, State}.
 
 request_code(Req, State) ->
-    AuthUrl = authentication_url(State),
+    {AuthState, Req2} = cowboy_req:qs_val(<<"text">>, Req, <<"">>),
+    AuthUrl = authentication_url(AuthState, State),
     ok = error_logger:info_msg("Request code: ~s~n", [AuthUrl]),
     {ok, Req2} = cowboy_req:reply(302, [{<<"location">>, AuthUrl}], Req),
     {ok, Req2, State}.
@@ -70,7 +71,7 @@ parse_user_id(#{<<"ok">> := false, <<"error">> := Error}) ->
 terminate(_Reason, _Req, _State) ->
     ok.
 
-authentication_url(State) ->
+authentication_url(AuthState, State) ->
     ClientId = State#state.client_id,
     ["https://slack.com/oauth/authorize?client_id=", ClientId,
-     "&redirect_url=https://memebot.io/auth&scope=client"].
+     "&redirect_url=https://memebot.io/auth&scope=client&state=", AuthState].

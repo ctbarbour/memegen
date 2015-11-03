@@ -2,20 +2,18 @@
 
 -export([init/3, handle/2, terminate/3]).
 
--record(state, { client_id :: string(), client_secret :: string() }).
+-record(state, {
+	  slack :: memebot_slack:slack()
+	 }).
+
+-define(AUTH_REDIRECT_URI, "https://memebot.io/auth/").
 
 init(_Type, Req, Opts) ->
-    case lists:keyfind(client_secret, 1, Opts) of
+    case lists:keyfind(slack, 1, Opts) of
+	{slack, Slack} ->
+	    {ok, Req, #state{slack=Slack}};
 	false ->
-	    {stop, missing_client_secret};
-	{client_secret, ClientSecret} ->
-	    case lists:keyfind(client_id, 1, Opts) of
-		false ->
-		    {stop, missing_client_id};
-		{client_id, ClientId} ->
-		    {ok, Req, #state{client_id=ClientId,
-				     client_secret=ClientSecret}}
-	    end
+	    {stop, missing_slack}
     end.
 
 handle(Req, State) ->
@@ -32,46 +30,49 @@ handle_method({_Method, Req}, State) ->
     Req2 = cowboy_req:reply(405, Req),
     {ok, Req2, State}.
 
-retrieve_token(Code, Req, State) ->
-    #state{client_id=ClientId, client_secret=ClientSecret} = State,
-    Url = io_lib:format("https://slack.com/api/oauth.access?client_id=~s&client_secret=~s&code=~s&redirect_url=https://memebot.io/auth",
-			[ClientId, ClientSecret, Code]),
-    {ok, {Status, Headers, Body}} = httpc:request(Url),
-    ok = error_logger:info_msg("Status: ~p~nHeaders: ~p~nBody: ~p~n", [Status, Headers, Body]),
-    parse_access_token(jsx:decode(list_to_binary(Body), [return_maps]), Req, State).
-
-parse_access_token(#{<<"ok">> := true, <<"access_token">> := AccessToken}, Req, State) ->
-    {ok, UserId} = retrieve_user_id(AccessToken),
-    ok = memebot_token_store:put(UserId, AccessToken),
-    {ok, Req2} = cowboy_req:reply(200, Req),
-    {ok, Req2, State};
-parse_access_token(#{<<"ok">> := false, <<"error">> := Error}, Req, State) ->
-    ok = error_logger:error_msg("Failed to retrieve access token: ~s~n", [Error]),
-    Response = jsx:encode(#{<<"ok">> => false, <<"error">> => Error}),
-    {ok, Req2} = cowboy_req:reply(400, [], Response, Req),
-    {ok, Req2, State}.
-
 request_code(Req, State) ->
+    #state{slack=Slack} = State,
     {AuthState, Req2} = cowboy_req:qs_val(<<"text">>, Req, <<"">>),
-    AuthUrl = authentication_url(AuthState, State),
-    ok = error_logger:info_msg("Request code: ~s~n", [AuthUrl]),
+    AuthUrl = memebot_slack:oauth_authorize(client,
+					    ?AUTH_REDIRECT_URI,
+					    AuthState, Slack),
     {ok, Req2} = cowboy_req:reply(302, [{<<"location">>, AuthUrl}], Req),
     {ok, Req2, State}.
 
-retrieve_user_id(Token) ->
-    Url = io_lib:format("https://slack.com/api/auth.test?token=~s", [Token]),
-    {ok, {_Status, _Headers, Body}} = httpc:request(Url),
-    parse_user_id(jsx:decode(list_to_binary(Body), [return_maps])).
+retrieve_token(Code, Req, State) ->
+    #state{slack=Slack} = State,
+    Response = memebot_slack:oauth_access(Code, ?AUTH_REDIRECT_URI, Slack),
+    handle_slack_access_token(Response, Req, State).
 
-parse_user_id(#{<<"ok">> := true, <<"user_id">> := UserId}) ->
-    {ok, UserId};
-parse_user_id(#{<<"ok">> := false, <<"error">> := Error}) ->
-    {error, Error}.
+handle_slack_access_token({ok, #{<<"access_token">> := AccessToken}}, Req, State) ->
+    #state{slack=Slack} = State,
+    case retrieve_user_id(AccessToken, Slack) of
+	{ok, UserId} ->
+	    ok = memebot_token_store:put(UserId, AccessToken),
+	    {ok, Req2} = cowboy_req:reply(200, Req),
+	    {ok, Req2, State};
+	{error, Reason} ->
+	    ok = error_logger:error_msg("Failed to retrieve user id from token: ~p~n",
+					[Reason]),
+	    {ok, Req2} = cowboy_req:reply(400, Req),
+	    {ok, Req2, State}
+	end;
+handle_slack_access_token({error, Reason}, Req, State) ->
+    ok = error_logger:error_msg("Failed to retrieve access token: ~s~n", [Reason]),
+    Json = jsx:encode(#{
+			 <<"ok">> => false,
+			 <<"error">> => Reason
+		       }),
+    {ok, Req2} = cowboy_req:reply(400, [], Json, Req),
+    {ok, Req2, State}.
+
+retrieve_user_id(Token, Slack) ->
+    case memebot_slack:auth_test(Token, Slack) of
+	{ok, #{<<"user_id">> := UserId}} ->
+	    {ok, UserId};
+	{error, Reason} ->
+	    {error, Reason}
+    end.
 
 terminate(_Reason, _Req, _State) ->
     ok.
-
-authentication_url(AuthState, State) ->
-    ClientId = State#state.client_id,
-    ["https://slack.com/oauth/authorize?client_id=", ClientId,
-     "&redirect_url=https://memebot.io/auth&scope=client&state=", AuthState].

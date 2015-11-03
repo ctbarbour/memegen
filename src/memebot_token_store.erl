@@ -9,8 +9,6 @@
 	 terminate/2]).
 
 -record(state, {
-	  aws_access_key_id :: string(),
-	  aws_secret_access_key :: string(),
 	  aws_region :: string(),
 	  table :: binary(),
 	  db_config :: aws_config()

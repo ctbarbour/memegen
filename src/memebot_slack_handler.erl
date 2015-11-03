@@ -31,11 +31,11 @@ handle_method({<<"POST">>, Req}, State) ->
 		    cowboy_req:reply(204, Req2);
 		{error, Reason} ->
 		    ok = error_logger:error_msg("Failed to post message to slack: ~p~n", [Reason]),
-		    Response = ["Need to authentication before you can use <https://memebot.io/auth?text=", http_uri:encode(Command#slash_command.text), "|memebot.io>"],
+		    Response = ["Need to authenticate before you can use <https://memebot.io/auth?text=", http_uri:encode(Command#slash_command.text), "|memebot.io>"],
 		    cowboy_req:reply(200, [{<<"content-type">>, <<"text/plain">>}], Response, Req2)
 	    end;
 	_ ->
-	    Response = ["Need to authentication before you can use <https://memebot.io/auth?text=", http_uri:encode(Command#slash_command.text), "|memebot.io>"],
+	    Response = ["Need to authenticate before you can use <https://memebot.io/auth?text=", http_uri:encode(Command#slash_command.text), "|memebot.io>"],
 	    cowboy_req:reply(200, [{<<"content-type">>, <<"text/plain">>}], Response, Req2)
     end;
 handle_method({_, Req}, _State) ->

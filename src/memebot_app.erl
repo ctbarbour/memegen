@@ -6,10 +6,10 @@
 
 start(_StartType, _StartArgs) ->
     {ok, AwsRegion} = get_env("AWS_REGION"),
-    ClientCredentials = client_credentials(),
+    Slack = client_credentials(),
     Dispatch = cowboy_router:compile([{'_',[{"/health", memebot_health_handler, []},
-					    {"/slack", memebot_slack_handler, []},
-					    {"/auth", memebot_auth_handler, ClientCredentials}
+					    {"/slack", memebot_slack_handler, [Slack]},
+					    {"/auth", memebot_auth_handler, [Slack]}
 					   ]}]),
     {ok, _} = cowboy:start_http(http, 100,
 				[{port, 8080}],
@@ -41,4 +41,4 @@ get_env(Env) ->
 client_credentials() ->
     {ok, ClientId} = get_env("SLACK_CLIENT_ID"),
     {ok, ClientSecret} = get_env("SLACK_CLIENT_SECRET"),
-    [{client_id, ClientId}, {client_secret, ClientSecret}].
+    memebot_slack:new(ClientId, ClientSecret).

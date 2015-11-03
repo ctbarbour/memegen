@@ -7,29 +7,38 @@
 	 handle/2,
 	 terminate/3]).
 
-init(_Type, Req, _Opts) ->
-    {ok, Req, undefined}.
+-record(state, { slack :: memebot_slack:slack() }).
+
+init(_Type, Req, [Slack]) ->
+    {ok, Req, #state{slack=Slack}}.
 
 handle(Req, State) ->
-    {ok, Req2} = handle_method(cowboy_req:method(Req)),
+    {ok, Req2} = handle_method(cowboy_req:method(Req), State),
     {ok, Req2, State}.
 
 terminate(_Reason, _Req, _State) ->
     ok.
 
-handle_method({<<"POST">>, Req}) ->
+handle_method({<<"POST">>, Req}, State) ->
+    #state{slack=Slack} = State,
     {ok, Body, Req2} = cowboy_req:body(Req),
     Command = memebot_slack:decode_slash_command(Body),
     case memebot_token_store:get(Command#slash_command.user_id) of
 	{ok, Token} ->
 	    {ok, GetUrl} = generate_meme(Command),
-	    _ = post_to_slack(Command, Token, GetUrl),
-	    cowboy_req:reply(204, Req2);
+	    case memebot_slack:post_message(GetUrl, Command#slash_command.channel_id, Token, Slack) of
+		{ok, _Response} ->
+		    cowboy_req:reply(204, Req2);
+		{error, Reason} ->
+		    ok = error_logger:error_msg("Failed to post message to slack: ~p~n", [Reason]),
+		    Response = ["Need to authentication before you can use <https://memebot.io/auth?text=", http_uri:encode(Command#slash_command.text), "|memebot.io>"],
+		    cowboy_req:reply(200, [{<<"content-type">>, <<"text/plain">>}], Response, Req2)
+	    end;
 	_ ->
 	    Response = ["Need to authentication before you can use <https://memebot.io/auth?text=", http_uri:encode(Command#slash_command.text), "|memebot.io>"],
 	    cowboy_req:reply(200, [{<<"content-type">>, <<"text/plain">>}], Response, Req2)
     end;
-handle_method({_, Req}) ->
+handle_method({_, Req}, _State) ->
     cowboy_req:reply(405, Req).
 
 generate_meme(Command) ->
@@ -44,14 +53,6 @@ meme_source() ->
 bucket() ->
     {ok, Bucket} = application:get_env(memebot, s3_bucket),
     Bucket.
-
-post_to_slack(Command, Token, GetUrl) ->
-    Body = lists:flatten(io_lib:format("as_user=true&token=~s&text=~s&channel=~s",
-				       [Token, GetUrl, Command#slash_command.channel_id])),
-    httpc:request(post,
-		  {"https://slack.com/api/chat.postMessage", [],
-		   "application/x-www-form-urlencoded", Body},
-		  [], []).
 
 put_object(Meme) ->
     MD5 = lists:flatten([io_lib:format("~2.16.0B", [X]) || <<X:8>> <= erlang:md5(Meme)]),

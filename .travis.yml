@@ -1,23 +1,27 @@
 sudo: false
 language: erlang
 otp_release:
-  - 18.1
+- 18.1
 addons:
   apt:
     packages:
-      - build-essential
-      - git
-      - pkg-config
-      - libmagickwand-dev
+    - build-essential
+    - git
+    - pkg-config
+    - libmagickwand-dev
 script: "./rebar3 as prod tar && cp ./_build/prod/rel/memebot/memebot-*.tar.gz ."
-before_deploy: "rm -rf !(memebot-*.tar.gz)"
+before_deploy: rm -rf !(memebot-*.tar.gz)
 deploy:
   on:
     branch: master
   provider: s3
-  bucket: "artifacts.memebot.io"
+  bucket: artifacts.memebot.io
   skip_cleanup: true
   region: us-west-1
   access_key_id: AKIAJZQS4CUCTDG4QEUQ
   secret_access_key:
     secure: HA2Z+XNdcYXFTvMbL572o1Eo8Pm4T8jmGeKew9Fl0eQ8J1OpHPDbnVZ8gLImdaFxnCicqYFvy4RLEpuO+/2fIRtkPL6McEdsPd3i45ujxYptFH2PqoddzNw4PCMenRag7MrBTgAMTqcAzZ4Pov0LYxxuw6SCxbWs7GzjcZsTv0Hx7tAmOVskMtUEh0HG5AyhQhOQdaBQf4L9EqQNQ3gC+PIGedBGmGOokHDpmnzKk6Rx2XPfrI+wAx4/w3qLPXMhZH3GA8v3DOHzA654R3EO8mr1JizdyRhtmyRgzaswDwr2EMxPuJiRIE+5qHCv+sl5EBINxkFdb+84aPQ+gCYi2FMIwFNtlqux1RKLibxoaTjgiTd/WgbZr48GWQj5aGUar1ANEEeGPIzkqR59/5TU9HRm7JKwkPvf1d06OjVpc91Yek4CfwV81Qcjlf2oJY+VJFWxT9yHXRxXG/RA8+9Nw6hoET4IoGP3jUAqub0cIGzfn9ev9cM/SP5zebUYwZ/nlP82Kjjk/CvSip+KPmBv1KDHmhtNJXPaHFavfJS+eFFDI8WcAhxCtVs8eQqllfOx+2rxXMYhK1zW9NSGFYZS83iTPU00H4uLBZP/Deu/45eq6+M8p236fpb6pHKpUvssTxWdMiBq/Md0tHl1vGq7kxb7EgS/vlPMusahs2JaYsA=
+notifications:
+  slack:
+    secure: fHItQ+mFEk2NGD2Nt2l5jhJQIBM2c76h0jdJGbmhz+M9+GQoReES7nuTXYSnSmFWOdXMnfXJ0itgZ2kW6Xp5c2uoCyQL3907wlq0vp4MrCT40cYj35nu2b6T+v72KjY34kfsLII2/o3kGBUSNAipAMICONsDK4gre3EVSyMdbXntgPvvCr+XACqaQozUmpYpKiKjzAc3CfClKvAizMCPAwX5SS07X6MiRgzZYlPrm4qbO0YuPMTpFxMgpZmAs4hROhLeKmGTPkDiiXsgsEtwLf/b6wMUrmsa8FSWYCJJSrK0vzKZrwnwNKYkNg02JK43RiSM3cG+07Alt92Mbncygh7vp72SlgjPE+xMt7Swj5UIs714f37vYnfhLcAtqmM7VDeW3VjCHrVqmbSVVblbuaTB7HOEF1Ld3meWl5uYqD1pP13qDnl8s8+bjcw/O9lX3hSZpOooqVznA8FIstVNcx9Vq5c9Ev8mmgfn+1OnxXd6clGs7rdTPnCT+ZteiHNqcQgwly2MN7H4MhmkDJziC861hpjQUj+tAkdos449SVxBL5m+A2lwqlox4bpdC8VcDPe9PoFvUjLOka6USoZnGNr8JV3Y07aiNYW8iEylNIwIOYMDCz00gJjuvBXLLeFfWkInB3IRBRhliM3+Zc5trui02xR8woWzwsQ7tdnP3co=
+    

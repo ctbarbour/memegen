@@ -25,7 +25,7 @@ prop_generate() ->
 		case memebot:generate(Opts) of
 		    {ok, _Meme} ->
 			true;
-		    {error, _Error} ->
-			false
+		    {error, Error} ->
+			{error, Error}
 		end
 	    end).
